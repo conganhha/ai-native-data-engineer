@@ -1,0 +1,6 @@
+-- Buổi 3
+-- TODO 1: Refactor business report bằng CTE nhiều bước.
+-- TODO 2: Running revenue theo ngày.
+-- TODO 3: DENSE_RANK product trong từng category.
+-- TODO 4: first_purchase, recency, frequency, monetary.
+-- TODO 5: cohort_month × activity_month.

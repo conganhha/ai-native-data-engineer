@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+      POSTGRES_USER: ${POSTGRES_USER:-de_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-de_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-de_user} -d ${POSTGRES_DB:-ecommerce}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mock-api:
+    build: ./mock_api
+    container_name: ecommerce-mock-api
+    environment:
+      API_KEY: ${MOCK_API_KEY:-training-key}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mock_api/data:/app/data:ro
+
+volumes:
+  postgres_data:

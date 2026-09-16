@@ -1,0 +1,1239 @@
+
+HƯỚNG DẪN CHI TIẾT LAB 1
+AI-NATIVE DATA ENGINEERING – DATA ENGINEERING FOUNDATION
+Bài 1: Tổng quan hệ thống dữ liệu và thiết kế E-commerce Database
+Thời lượng gợi ý cho Lab 1: 60–90 phút
+
+======================================================================
+MỤC TIÊU CUỐI LAB
+======================================================================
+
+Sau Lab 1, học viên phải đạt được các kết quả sau:
+
+1. Hiểu business requirement của hệ thống E-commerce.
+2. Xác định đúng các entity chính.
+3. Xác định Primary Key, Foreign Key và cardinality.
+4. Vẽ được ERD.
+5. PostgreSQL chạy được trong Docker.
+6. Kết nối PostgreSQL bằng DBeaver.
+7. Tạo được schema core.
+8. Tạo đủ 6 bảng OLTP:
+   - categories
+   - customers
+   - products
+   - orders
+   - order_items
+   - payments
+9. Kiểm tra được PK, FK, UNIQUE, CHECK constraints.
+10. Kiểm tra database bằng SQL thay vì chỉ nhìn giao diện.
+11. Đối chiếu ERD với database thật.
+12. Commit trạng thái cuối buổi bằng Git.
+
+Nguyên tắc quan trọng:
+- Không coi "code không báo lỗi" là đủ.
+- Mỗi bước phải có bằng chứng chạy được.
+- Không sửa database thủ công để "cho ra kết quả"; mọi thay đổi nên nằm trong SQL/code để có thể chạy lại.
+
+
+======================================================================
+BƯỚC 0 – CHUẨN BỊ MÔI TRƯỜNG
+======================================================================
+
+Mục đích:
+Đảm bảo tất cả học viên có cùng môi trường thực hành trước khi bắt đầu thiết kế database.
+
+Cần có:
+- Docker Desktop
+- DBeaver Community
+- VS Code
+- Git
+- Trình duyệt để dùng dbdiagram.io
+
+Không cần cài PostgreSQL Server trực tiếp trên máy vì PostgreSQL sẽ chạy trong Docker.
+
+Các file chính cần mở trong repository:
+
+    docs/business_requirements.md
+    docs/data_contract.md
+    sql/student/01_create_oltp.sql
+    docker-compose.yml
+    .env.example
+
+Kiểm tra Docker:
+
+    docker --version
+    docker compose version
+
+Kiểm tra Git:
+
+    git --version
+
+Lý do:
+Nếu môi trường chưa chạy ổn thì phần còn lại của Lab sẽ bị ngắt quãng bởi lỗi cài đặt thay vì tập trung vào thiết kế dữ liệu.
+
+
+======================================================================
+BƯỚC 1 – ĐỌC BUSINESS REQUIREMENT
+======================================================================
+
+Mục đích:
+Data Engineer không bắt đầu từ CREATE TABLE. Phải bắt đầu từ business requirement.
+
+Mở file:
+
+    docs/business_requirements.md
+
+Câu hỏi:
+
+    "Hệ thống E-commerce này cần lưu những đối tượng chính nào?"
+
+Kết quả mong đợi gồm 6 entity:
+
+    customers
+    categories
+    products
+    orders
+    order_items
+    payments
+
+Lý do:
+Entity chính là các đối tượng nghiệp vụ mà database phải lưu trữ.
+Nếu xác định sai entity từ đầu thì ERD, SQL và pipeline sau đó đều sai.
+
+Gợi ý giảng:
+- Customer: khách hàng
+- Category: danh mục sản phẩm
+- Product: sản phẩm
+- Order: đơn hàng
+- Order Item: từng dòng sản phẩm trong đơn
+- Payment: thanh toán
+
+
+======================================================================
+BƯỚC 2 – XÁC ĐỊNH PRIMARY KEY
+======================================================================
+
+Mục đích:
+Mỗi bảng phải có cách xác định duy nhất một record.
+
+Primary Key mong đợi:
+
+    customers      -> customer_id
+    categories     -> category_id
+    products       -> product_id
+    orders         -> order_id
+    order_items    -> order_item_id
+    payments       -> payment_id
+
+Câu hỏi cho lớp:
+
+    "Làm thế nào biết hai dòng customer có phải cùng một khách hàng hay không?"
+
+Trả lời:
+Dựa vào Primary Key.
+
+Lý do:
+Primary Key bảo đảm:
+- một record được định danh duy nhất;
+- không có duplicate key;
+- là cơ sở để các bảng khác tham chiếu bằng Foreign Key.
+
+
+======================================================================
+BƯỚC 3 – XÁC ĐỊNH RELATIONSHIP VÀ FOREIGN KEY
+======================================================================
+
+Mục đích:
+Hiểu dữ liệu liên hệ với nhau thế nào trước khi viết SQL.
+
+Các quan hệ chính:
+
+    CUSTOMERS   1 ----- N ORDERS
+    ORDERS      1 ----- N ORDER_ITEMS
+    PRODUCTS    1 ----- N ORDER_ITEMS
+    CATEGORIES  1 ----- N PRODUCTS
+    ORDERS      1 ----- N PAYMENTS
+
+Foreign Key tương ứng:
+
+    orders.customer_id
+        -> customers.customer_id
+
+    products.category_id
+        -> categories.category_id
+
+    order_items.order_id
+        -> orders.order_id
+
+    order_items.product_id
+        -> products.product_id
+
+    payments.order_id
+        -> orders.order_id
+
+Ngoài ra categories có self-reference:
+
+    categories.parent_category_id
+        -> categories.category_id
+
+Câu hỏi quan trọng:
+
+    "Một order có nhiều product và một product có thể nằm trong nhiều order.
+     Vậy Order–Product là quan hệ gì?"
+
+Trả lời:
+
+    N:M
+
+Câu hỏi tiếp:
+
+    "Relational database xử lý N:M như thế nào?"
+
+Trả lời:
+
+    Tạo bảng trung gian order_items.
+
+Lý do:
+Relational database không biểu diễn N:M trực tiếp bằng một FK duy nhất.
+Bảng order_items chuyển quan hệ N:M thành hai quan hệ 1:N.
+
+
+======================================================================
+BƯỚC 4 – VẼ ERD TRÊN DBDIAGRAM.IO
+======================================================================
+
+Mục đích:
+Biến business requirement thành mô hình dữ liệu trực quan trước khi viết DDL.
+
+Thao tác:
+1. Mở https://dbdiagram.io
+2. New Diagram
+3. Tạo 6 entity.
+4. Đặt PK.
+5. Đặt FK.
+6. Nối relationship.
+
+Sơ đồ logic mong đợi:
+
+    categories
+        |
+       1:N
+        |
+    products
+        |
+       1:N
+        |
+    order_items
+        |
+       N:1
+        |
+      orders
+        |
+       N:1
+        |
+    customers
+
+    orders
+       |
+      1:N
+       |
+    payments
+
+Một cách nhìn khác:
+
+    categories ---> products -----\
+                                   \
+                                    ---> order_items
+                                   /
+    customers ----> orders -------/
+                      |
+                      ---> payments
+
+Câu hỏi:
+1. PK của bảng này là gì?
+2. FK nằm ở phía 1 hay phía N?
+3. Một order có bao nhiêu order_items?
+4. Nếu bỏ order_items thì quan hệ Order–Product sẽ biểu diễn thế nào?
+
+Artifact nên lưu:
+
+    oltp_erd_v1.png
+
+hoặc:
+
+    ecommerce_oltp.dbml
+
+Lý do:
+ERD là hợp đồng thiết kế ban đầu. Sau khi database được tạo, ta sẽ đối chiếu database thật với ERD.
+
+
+======================================================================
+BƯỚC 5 – KHỞI ĐỘNG POSTGRESQL BẰNG DOCKER
+======================================================================
+
+Mục đích:
+Chạy PostgreSQL trong môi trường đồng nhất giữa giảng viên và sinh viên.
+
+Đầu tiên mở Docker Desktop.
+
+Trong VS Code Terminal, đứng tại thư mục chứa docker-compose.yml.
+
+Chạy:
+
+    docker compose up -d postgres
+
+Sau đó kiểm tra:
+
+    docker compose ps
+
+Kết quả mong đợi:
+
+    ecommerce-postgres   postgres   running (healthy)   0.0.0.0:5432->5432/tcp
+
+Ý nghĩa:
+- container PostgreSQL đang chạy;
+- trạng thái healthy;
+- port 5432 trong container được map ra localhost:5432.
+
+Nếu cần xem log:
+
+    docker compose logs postgres
+
+Dừng container:
+
+    docker compose down
+
+Lý do:
+Docker giúp:
+- cùng PostgreSQL version;
+- reset môi trường nhanh;
+- không phải cài PostgreSQL Server trực tiếp;
+- dễ tái tạo môi trường trên máy khác.
+
+
+======================================================================
+BƯỚC 6 – KIỂM TRA PORT 5432
+======================================================================
+
+Mục đích:
+Port 5432 là port mặc định PostgreSQL. Nếu đã có một PostgreSQL local hoặc service khác dùng port này, Docker có thể không start.
+
+macOS/Linux:
+
+    lsof -i :5432
+
+Windows:
+
+    netstat -ano | findstr :5432
+
+Nếu port bị chiếm:
+- tắt PostgreSQL local;
+hoặc
+- đổi port mapping trong docker-compose.yml.
+
+Ví dụ đổi:
+
+    5433:5432
+
+Khi đó DBeaver phải dùng port 5433.
+
+Lý do:
+Container có thể chạy PostgreSQL bên trong nhưng máy host cần một port trống để truy cập từ bên ngoài.
+
+
+======================================================================
+BƯỚC 7 – KẾT NỐI POSTGRESQL BẰNG DBEAVER
+======================================================================
+
+Mục đích:
+DBeaver là database client để quan sát schema, chạy SQL và kiểm tra database.
+
+Trong DBeaver:
+
+    New Database Connection
+    -> PostgreSQL
+
+Thông số thường dùng trong Lab:
+
+    Host:       localhost
+    Port:       5432
+    Database:   ecommerce
+    Username:   de_user
+    Password:   de_password
+
+Lưu ý:
+Nếu repository có .env hoặc docker-compose.yml khác thì lấy đúng thông tin từ đó.
+Không nên bắt sinh viên học thuộc username/password.
+
+Bấm:
+
+    Test Connection
+
+Nếu DBeaver yêu cầu tải driver:
+    Download
+
+Sau khi kết nối thành công, mở SQL Editor và chạy:
+
+    SELECT 1;
+
+Kết quả:
+
+    1
+
+Lý do:
+Container "healthy" mới chỉ chứng minh PostgreSQL sống.
+SELECT 1 chứng minh DBeaver thực sự kết nối được với database.
+
+
+======================================================================
+BƯỚC 8 – KIỂM TRA DATABASE HIỆN TẠI
+======================================================================
+
+Chạy:
+
+    SELECT current_database();
+
+Kết quả mong đợi:
+
+    ecommerce
+
+Kiểm tra search_path:
+
+    SHOW search_path;
+
+Lý do:
+Một lỗi rất thường gặp là kết nối nhầm database hoặc chạy query trong schema không đúng.
+
+
+======================================================================
+BƯỚC 9 – TẠO SCHEMA CORE
+======================================================================
+
+Mục đích:
+Tách các bảng nghiệp vụ chính ra khỏi schema public.
+
+Chạy:
+
+    CREATE SCHEMA IF NOT EXISTS core;
+
+Có thể đặt search_path:
+
+    SET search_path TO core, public;
+
+Tuy nhiên trong DDL chính thức nên ghi rõ:
+
+    core.customers
+    core.orders
+    core.payments
+
+Kiểm tra schema:
+
+    SELECT schema_name
+    FROM information_schema.schemata
+    WHERE schema_name = 'core';
+
+Kết quả:
+
+    core
+
+Lý do:
+Schema là namespace logic trong database.
+Ví dụ:
+
+    ecommerce
+    |
+    +-- public
+    |
+    +-- core
+        +-- customers
+        +-- orders
+        +-- payments
+
+
+======================================================================
+BƯỚC 10 – TẠO CÁC BẢNG THEO ĐÚNG THỨ TỰ
+======================================================================
+
+Thứ tự khuyến nghị:
+
+    1. categories
+    2. customers
+    3. products
+    4. orders
+    5. order_items
+    6. payments
+
+Dependency:
+
+    categories ---> products -----\
+                                   \
+                                    ---> order_items
+                                   /
+    customers ----> orders -------/
+                      |
+                      ---> payments
+
+Lý do:
+Bảng con có Foreign Key tham chiếu bảng cha.
+Bảng cha nên tồn tại trước.
+
+Ví dụ:
+products cần categories.
+orders cần customers.
+order_items cần orders và products.
+payments cần orders.
+
+
+======================================================================
+BƯỚC 11 – DDL HOÀN CHỈNH CHO 6 BẢNG
+======================================================================
+
+Có thể dùng script sau:
+
+----------------------------------------------------------------------
+11.1 CREATE SCHEMA
+----------------------------------------------------------------------
+
+CREATE SCHEMA IF NOT EXISTS core;
+SET search_path TO core, public;
+
+
+----------------------------------------------------------------------
+11.2 CATEGORIES
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS core.categories (
+    category_id         VARCHAR(10) PRIMARY KEY,
+    category_name       VARCHAR(120) NOT NULL,
+    parent_category_id  VARCHAR(10),
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT fk_categories_parent
+        FOREIGN KEY (parent_category_id)
+        REFERENCES core.categories(category_id),
+
+    CONSTRAINT chk_categories_updated_at
+        CHECK (updated_at >= created_at)
+);
+
+
+----------------------------------------------------------------------
+11.3 CUSTOMERS
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS core.customers (
+    customer_id         VARCHAR(12) PRIMARY KEY,
+    full_name           VARCHAR(150) NOT NULL,
+    email               VARCHAR(200) NOT NULL,
+    phone               VARCHAR(30),
+    city                VARCHAR(100),
+    customer_segment    VARCHAR(30) NOT NULL,
+    status              VARCHAR(20) NOT NULL,
+    source_system       VARCHAR(50) NOT NULL DEFAULT 'unknown',
+    ingested_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT uq_customers_email
+        UNIQUE (email),
+
+    CONSTRAINT chk_customers_status
+        CHECK (status IN ('active', 'inactive')),
+
+    CONSTRAINT chk_customers_updated_at
+        CHECK (updated_at >= created_at)
+);
+
+
+----------------------------------------------------------------------
+11.4 PRODUCTS
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS core.products (
+    product_id          VARCHAR(12) PRIMARY KEY,
+    category_id         VARCHAR(10) NOT NULL,
+    product_name        VARCHAR(200) NOT NULL,
+    unit_price          NUMERIC(14,2) NOT NULL,
+    cost_price          NUMERIC(14,2) NOT NULL,
+    status              VARCHAR(20) NOT NULL,
+    source_system       VARCHAR(50) NOT NULL DEFAULT 'unknown',
+    ingested_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT fk_products_category
+        FOREIGN KEY (category_id)
+        REFERENCES core.categories(category_id),
+
+    CONSTRAINT chk_products_unit_price
+        CHECK (unit_price >= 0),
+
+    CONSTRAINT chk_products_cost_price
+        CHECK (cost_price >= 0),
+
+    CONSTRAINT chk_products_status
+        CHECK (status IN ('active', 'inactive', 'discontinued')),
+
+    CONSTRAINT chk_products_updated_at
+        CHECK (updated_at >= created_at)
+);
+
+
+----------------------------------------------------------------------
+11.5 ORDERS
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS core.orders (
+    order_id            VARCHAR(12) PRIMARY KEY,
+    customer_id         VARCHAR(12) NOT NULL,
+    order_date          TIMESTAMPTZ NOT NULL,
+    status              VARCHAR(20) NOT NULL,
+    shipping_city       VARCHAR(100),
+    channel             VARCHAR(20) NOT NULL,
+    order_total         NUMERIC(14,2) NOT NULL,
+    source_system       VARCHAR(50) NOT NULL DEFAULT 'unknown',
+    ingested_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT fk_orders_customer
+        FOREIGN KEY (customer_id)
+        REFERENCES core.customers(customer_id),
+
+    CONSTRAINT chk_orders_status
+        CHECK (
+            status IN (
+                'pending',
+                'confirmed',
+                'shipped',
+                'completed',
+                'cancelled'
+            )
+        ),
+
+    CONSTRAINT chk_orders_channel
+        CHECK (channel IN ('web', 'mobile_app', 'social')),
+
+    CONSTRAINT chk_orders_total
+        CHECK (order_total >= 0),
+
+    CONSTRAINT chk_orders_updated_at
+        CHECK (updated_at >= created_at)
+);
+
+
+----------------------------------------------------------------------
+11.6 ORDER_ITEMS
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS core.order_items (
+    order_item_id       VARCHAR(16) PRIMARY KEY,
+    order_id            VARCHAR(12) NOT NULL,
+    product_id          VARCHAR(12) NOT NULL,
+    quantity            INTEGER NOT NULL,
+    unit_price          NUMERIC(14,2) NOT NULL,
+    discount_amount     NUMERIC(14,2) NOT NULL DEFAULT 0,
+    source_system       VARCHAR(50) NOT NULL DEFAULT 'unknown',
+    ingested_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT fk_order_items_order
+        FOREIGN KEY (order_id)
+        REFERENCES core.orders(order_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_order_items_product
+        FOREIGN KEY (product_id)
+        REFERENCES core.products(product_id),
+
+    CONSTRAINT chk_order_items_quantity
+        CHECK (quantity > 0),
+
+    CONSTRAINT chk_order_items_unit_price
+        CHECK (unit_price >= 0),
+
+    CONSTRAINT chk_order_items_discount
+        CHECK (discount_amount >= 0),
+
+    CONSTRAINT chk_order_items_discount_vs_gross
+        CHECK (discount_amount <= unit_price * quantity),
+
+    CONSTRAINT chk_order_items_updated_at
+        CHECK (updated_at >= created_at)
+);
+
+
+----------------------------------------------------------------------
+11.7 PAYMENTS
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS core.payments (
+    payment_id          VARCHAR(12) PRIMARY KEY,
+    order_id            VARCHAR(12) NOT NULL,
+    payment_date        TIMESTAMPTZ NOT NULL,
+    payment_method      VARCHAR(30) NOT NULL,
+    payment_status      VARCHAR(20) NOT NULL,
+    amount              NUMERIC(14,2) NOT NULL,
+    source_system       VARCHAR(50) NOT NULL DEFAULT 'unknown',
+    ingested_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT fk_payments_order
+        FOREIGN KEY (order_id)
+        REFERENCES core.orders(order_id),
+
+    CONSTRAINT chk_payments_method
+        CHECK (
+            payment_method IN (
+                'cash',
+                'bank_transfer',
+                'card',
+                'e_wallet'
+            )
+        ),
+
+    CONSTRAINT chk_payments_status
+        CHECK (
+            payment_status IN (
+                'pending',
+                'success',
+                'failed',
+                'refunded'
+            )
+        ),
+
+    CONSTRAINT chk_payments_amount
+        CHECK (amount >= 0),
+
+    CONSTRAINT chk_payments_updated_at
+        CHECK (updated_at >= created_at)
+);
+
+
+======================================================================
+BƯỚC 12 – TẠO INDEX
+======================================================================
+
+Mục đích:
+Tạo index cho các cột thường join/filter.
+
+Quan trọng:
+Ghi đầy đủ schema core.<table> để không phụ thuộc search_path.
+
+CREATE INDEX IF NOT EXISTS idx_products_category
+    ON core.products(category_id);
+
+CREATE INDEX IF NOT EXISTS idx_orders_customer
+    ON core.orders(customer_id);
+
+CREATE INDEX IF NOT EXISTS idx_orders_date
+    ON core.orders(order_date);
+
+CREATE INDEX IF NOT EXISTS idx_orders_status
+    ON core.orders(status);
+
+CREATE INDEX IF NOT EXISTS idx_order_items_order
+    ON core.order_items(order_id);
+
+CREATE INDEX IF NOT EXISTS idx_order_items_product
+    ON core.order_items(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_payments_order
+    ON core.payments(order_id);
+
+CREATE INDEX IF NOT EXISTS idx_payments_date
+    ON core.payments(payment_date);
+
+Lý do:
+Nếu chỉ viết:
+
+    ON payments(order_id)
+
+thì PostgreSQL phụ thuộc vào search_path.
+Viết:
+
+    ON core.payments(order_id)
+
+rõ ràng và an toàn hơn.
+
+
+======================================================================
+BƯỚC 13 – KIỂM TRA 6 BẢNG ĐÃ TỒN TẠI
+======================================================================
+
+Cách 1 – Liệt kê các bảng:
+
+SELECT
+    table_schema,
+    table_name
+FROM information_schema.tables
+WHERE table_schema = 'core'
+  AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+
+Kết quả mong đợi:
+
+    core | categories
+    core | customers
+    core | order_items
+    core | orders
+    core | payments
+    core | products
+
+
+Cách 2 – Đếm số bảng:
+
+SELECT COUNT(*) AS number_of_tables
+FROM information_schema.tables
+WHERE table_schema = 'core'
+  AND table_type = 'BASE TABLE';
+
+Kết quả:
+
+    6
+
+
+Cách 3 – Kiểm tra trực tiếp từng bảng:
+
+SELECT
+    to_regclass('core.categories')  AS categories,
+    to_regclass('core.customers')   AS customers,
+    to_regclass('core.products')    AS products,
+    to_regclass('core.orders')      AS orders,
+    to_regclass('core.order_items') AS order_items,
+    to_regclass('core.payments')    AS payments;
+
+Nếu bảng tồn tại sẽ hiện tên:
+    core.customers
+Nếu chưa tồn tại sẽ trả:
+    NULL
+
+Lý do:
+Không nên chỉ nhìn cây Tables của DBeaver vì DBeaver có thể chưa refresh metadata.
+
+
+======================================================================
+BƯỚC 14 – KIỂM TRA FOREIGN KEY
+======================================================================
+
+Mục đích:
+Chứng minh relationship trong ERD đã thực sự được tạo trong database.
+
+Chạy:
+
+SELECT
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_name  AS referenced_table,
+    ccu.column_name AS referenced_column
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
+    ON tc.constraint_name = kcu.constraint_name
+   AND tc.constraint_schema = kcu.constraint_schema
+JOIN information_schema.constraint_column_usage ccu
+    ON tc.constraint_name = ccu.constraint_name
+   AND tc.constraint_schema = ccu.constraint_schema
+WHERE tc.constraint_type = 'FOREIGN KEY'
+  AND tc.table_schema = 'core'
+ORDER BY tc.table_name, kcu.column_name;
+
+Các FK chính mong đợi:
+
+    categories.parent_category_id -> categories.category_id
+    products.category_id          -> categories.category_id
+    orders.customer_id            -> customers.customer_id
+    order_items.order_id          -> orders.order_id
+    order_items.product_id        -> products.product_id
+    payments.order_id             -> orders.order_id
+
+Lý do:
+Có bảng không có nghĩa là relationship đúng.
+Foreign Key mới là bằng chứng database đang bảo vệ referential integrity.
+
+
+======================================================================
+BƯỚC 15 – KIỂM TRA INDEX
+======================================================================
+
+Chạy:
+
+SELECT
+    tablename,
+    indexname
+FROM pg_indexes
+WHERE schemaname = 'core'
+ORDER BY tablename, indexname;
+
+Lý do:
+PK và UNIQUE thường tạo index tự động.
+Các index tự tạo cũng phải tồn tại đúng schema.
+
+
+======================================================================
+BƯỚC 16 – TEST CHECK CONSTRAINT BẰNG DỮ LIỆU SAI
+======================================================================
+
+Mục đích:
+Cho học viên thấy constraint thực sự bảo vệ dữ liệu, không phải chỉ là lý thuyết.
+
+Ví dụ thử insert customer với status sai:
+
+INSERT INTO core.customers (
+    customer_id,
+    full_name,
+    email,
+    customer_segment,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (
+    'CUS_TEST',
+    'Test User',
+    'test@example.com',
+    'Standard',
+    'wrong_status',
+    now(),
+    now()
+);
+
+Kết quả mong đợi:
+PostgreSQL phải từ chối vì vi phạm:
+
+    chk_customers_status
+
+Lý do:
+Database là lớp bảo vệ cuối cùng.
+Dù application gửi dữ liệu sai, constraint vẫn ngăn dữ liệu không hợp lệ vào bảng.
+
+
+======================================================================
+BƯỚC 17 – TEST FOREIGN KEY BẰNG DỮ LIỆU SAI
+======================================================================
+
+Mục đích:
+Cho thấy không thể tạo order cho customer không tồn tại.
+
+Chạy:
+
+INSERT INTO core.orders (
+    order_id,
+    customer_id,
+    order_date,
+    status,
+    channel,
+    order_total,
+    created_at,
+    updated_at
+)
+VALUES (
+    'ORD_TEST',
+    'CUS_NOT_EXIST',
+    now(),
+    'pending',
+    'web',
+    100000,
+    now(),
+    now()
+);
+
+Kết quả mong đợi:
+PostgreSQL báo Foreign Key violation.
+
+Lý do:
+orders.customer_id phải tham chiếu một customer có thật.
+
+Gợi ý giảng:
+
+    "Nếu database cho phép order tham chiếu customer không tồn tại,
+     analytics sau này sẽ gặp orphan record và báo cáo sai."
+
+
+======================================================================
+BƯỚC 18 – KIỂM TRA SELECT
+======================================================================
+
+Chạy:
+
+    SELECT * FROM core.customers LIMIT 5;
+
+Nếu chưa load seed data thì kết quả có thể là:
+
+    0 rows
+
+Điều này hoàn toàn bình thường.
+
+Lý do:
+Lab 1 mới xây cấu trúc database, chưa phải bài load dữ liệu.
+
+
+======================================================================
+BƯỚC 19 – ĐỐI CHIẾU ERD VỚI DATABASE THẬT
+======================================================================
+
+Mục đích:
+Chứng minh vòng đời thiết kế:
+
+    Business Requirement
+            |
+            v
+          ERD
+            |
+            v
+        SQL DDL
+            |
+            v
+       PostgreSQL
+            |
+            v
+       Verify / ERD
+
+Kiểm tra:
+- Có đúng 6 entity không?
+- PK có đúng không?
+- FK có đúng hướng không?
+- N:M Order–Product đã được tách thành order_items chưa?
+- categories có self-reference không?
+
+Lý do:
+ERD và database phải nhất quán.
+Nếu ERD khác SQL thì tài liệu thiết kế không còn đáng tin cậy.
+
+
+======================================================================
+BƯỚC 20 – REVERSE DATABASE RA DBML (TÙY CHỌN)
+======================================================================
+
+Mục đích:
+Tạo ERD từ database thật để so sánh với thiết kế ban đầu.
+
+Cài DBML CLI:
+
+    npm install -g @dbml/cli
+
+Ví dụ:
+
+    db2dbml postgres \
+    "postgresql://de_user:de_password@localhost:5432/ecommerce?schemas=core" \
+    -o ecommerce_core.dbml
+
+Sau đó:
+1. Mở ecommerce_core.dbml
+2. Copy nội dung
+3. Vào dbdiagram.io
+4. New Diagram
+5. Paste DBML
+
+Lý do:
+Đây là cách rất hay để kiểm tra:
+
+    ERD thiết kế ban đầu
+            vs
+    ERD reverse từ database thật
+
+
+======================================================================
+BƯỚC 21 – COMMIT GIT
+======================================================================
+
+Mục đích:
+Lưu một trạng thái project đã chạy được sau Buổi 1.
+
+Chạy:
+
+    git status
+
+Sau đó:
+
+    git add .
+
+    git commit -m "session-01: ecommerce oltp database"
+
+Lý do:
+Mỗi buổi nên có checkpoint code rõ ràng.
+Nếu Buổi 2 có lỗi, có thể quay lại trạng thái đã chạy được ở cuối Buổi 1.
+
+
+======================================================================
+CHECKPOINT CUỐI LAB 1
+======================================================================
+
+Học viên tự kiểm tra:
+
+[ ] Docker Desktop chạy.
+[ ] PostgreSQL container healthy.
+[ ] DBeaver kết nối được.
+[ ] SELECT 1 trả về 1.
+[ ] Database đang là ecommerce.
+[ ] Schema core tồn tại.
+[ ] Có đúng 6 tables.
+[ ] Primary Keys đúng.
+[ ] Foreign Keys đúng.
+[ ] UNIQUE constraints quan trọng tồn tại.
+[ ] CHECK constraints quan trọng tồn tại.
+[ ] Các index chính tồn tại.
+[ ] ERD khớp với database.
+[ ] SQL script chạy lại không phụ thuộc thao tác thủ công.
+[ ] Repository có commit cuối buổi.
+
+
+======================================================================
+CÁC LỖI THƯỜNG GẶP VÀ CÁCH XỬ LÝ
+======================================================================
+
+1. Docker Desktop chưa chạy
+
+Kiểm tra:
+
+    docker compose ps
+
+Giải pháp:
+Mở Docker Desktop rồi chạy lại:
+
+    docker compose up -d postgres
+
+
+2. Port 5432 bị chiếm
+
+macOS/Linux:
+
+    lsof -i :5432
+
+Windows:
+
+    netstat -ano | findstr :5432
+
+Giải pháp:
+- dừng PostgreSQL local;
+hoặc
+- đổi port trong docker-compose.yml.
+
+
+3. DBeaver không thấy Tables
+
+Kiểm tra bằng SQL:
+
+SELECT table_schema, table_name
+FROM information_schema.tables
+WHERE table_schema = 'core'
+ORDER BY table_name;
+
+Nếu SQL thấy bảng nhưng DBeaver chưa thấy:
+- right-click schema core
+- Refresh
+hoặc
+- F5
+
+
+4. ERROR: relation "payments" does not exist
+
+Nguyên nhân thường gặp:
+Câu SQL dùng:
+
+    ON payments(order_id)
+
+nhưng bảng thật là:
+
+    core.payments
+
+Sửa:
+
+CREATE INDEX IF NOT EXISTS idx_payments_order
+    ON core.payments(order_id);
+
+
+5. FK tạo lỗi
+
+Nguyên nhân:
+Bảng cha chưa tồn tại.
+
+Kiểm tra thứ tự:
+categories/customers trước,
+products/orders sau,
+order_items/payments cuối.
+
+
+6. Dùng FLOAT cho tiền
+
+Không nên:
+
+    FLOAT
+
+Nên:
+
+    NUMERIC(14,2)
+
+Lý do:
+Tiền cần độ chính xác thập phân ổn định.
+
+
+7. Tên cột/ bảng không khớp ERD
+
+Giải pháp:
+Theo Data Contract.
+Không tự đổi tên giữa các buổi.
+
+
+======================================================================
+LỜI CHỐT LAB
+======================================================================
+
+"Các em lưu ý, sản phẩm của Lab 1 không phải chỉ là một file SQL.
+Sản phẩm của chúng ta là một mô hình dữ liệu có thể tái tạo được.
+
+Business requirement cho chúng ta biết cần lưu gì.
+ERD cho chúng ta biết dữ liệu liên hệ với nhau thế nào.
+SQL DDL biến thiết kế đó thành database thật.
+Docker giúp mọi người chạy cùng một môi trường.
+DBeaver và các query kiểm tra cho chúng ta bằng chứng rằng database đang đúng.
+
+Từ Buổi 2 trở đi chúng ta sẽ dùng chính database này để load dữ liệu và làm analytics.
+Vì vậy nếu ERD, PK, FK hoặc constraint hôm nay sai, các buổi sau sẽ sai theo."
+
+
+======================================================================
+TÓM TẮT LUỒNG LAB 1
+======================================================================
+
+Business Requirement
+        |
+        v
+Identify Entities
+        |
+        v
+Primary Key / Foreign Key
+        |
+        v
+ERD
+        |
+        v
+Docker PostgreSQL
+        |
+        v
+DBeaver Connection
+        |
+        v
+Create schema core
+        |
+        v
+Create 6 OLTP tables
+        |
+        v
+Create constraints + indexes
+        |
+        v
+Verify tables / FK / constraints
+        |
+        v
+Test invalid data
+        |
+        v
+Compare ERD vs database
+        |
+        v
+Git Commit
+
+END OF LAB 1 GUIDE

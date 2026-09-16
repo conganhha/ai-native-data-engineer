@@ -1,0 +1,16 @@
+# Environment variables / secrets
+.env
+
+# Logs
+logs/
+
+# Python cache
+*.pyc
+__pycache__/
+
+# Python virtual environment
+.venv/
+
+# Local data
+data/raw/
+data/reject/

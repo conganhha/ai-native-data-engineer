@@ -1,0 +1,5 @@
+# Ví dụ: chạy 02:00 hàng ngày trên macOS/Linux (điều chỉnh đường dẫn tuyệt đối)
+0 2 * * * /ABSOLUTE/PATH/AI_Native_DE_Module1_8_Buoi/scripts/run_daily.sh >> /ABSOLUTE/PATH/AI_Native_DE_Module1_8_Buoi/logs/cron.log 2>&1
+
+# Trong lớp: KHÔNG yêu cầu sinh viên bật cron ngay. Mục tiêu là đọc/giải thích biểu thức,
+# sau đó chạy scripts/run_daily.sh thủ công để kiểm chứng trước khi schedule.

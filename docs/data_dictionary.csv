@@ -1,0 +1,23 @@
+table,field,type,constraint,description
+categories,category_id,varchar,PK,Mã category
+categories,parent_category_id,varchar,FK,Category cha
+customers,customer_id,varchar,PK,Mã khách hàng
+customers,email,varchar,UNIQUE,Email khách hàng
+customers,customer_segment,varchar,,Standard/Silver/Gold/Platinum
+products,product_id,varchar,PK,Mã sản phẩm
+products,category_id,varchar,FK,Category
+products,unit_price,numeric,,Giá bán
+orders,order_id,varchar,PK,Mã đơn
+orders,customer_id,varchar,FK,Khách hàng
+orders,order_date,timestamptz,,Thời gian đặt
+orders,status,varchar,,Trạng thái đơn
+orders,order_total,numeric,,Tổng giá trị đơn
+order_items,order_item_id,varchar,PK,Dòng sản phẩm trong đơn
+order_items,order_id,varchar,FK,Đơn hàng
+order_items,product_id,varchar,FK,Sản phẩm
+order_items,quantity,int,,Số lượng
+order_items,discount_amount,numeric,,Giảm giá
+payments,payment_id,varchar,PK,Mã thanh toán
+payments,order_id,varchar,FK,Đơn hàng
+payments,payment_status,varchar,,Trạng thái thanh toán
+payments,amount,numeric,,Số tiền

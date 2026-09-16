@@ -1,0 +1,11 @@
+-- Buổi 2: 10 business questions
+-- TODO 1: Tổng số khách hàng active theo city
+-- TODO 2: Top 10 sản phẩm có unit_price cao nhất
+-- TODO 3: Số đơn theo ngày và status
+-- TODO 4: Revenue/AOV của completed orders theo tháng
+-- TODO 5: Revenue theo category
+-- TODO 6: Top 10 customers theo revenue
+-- TODO 7: Top 10 products theo quantity
+-- TODO 8: Payment success rate
+-- TODO 9: Revenue theo channel
+-- TODO 10: Đối soát SUM(order_total) với tổng item net amount

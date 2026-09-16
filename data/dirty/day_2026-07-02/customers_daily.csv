@@ -1,0 +1,41 @@
+customer_id,full_name,email,phone,city,customer_segment,status,source_system,created_at,updated_at
+CUS000001,Glenda Crosby,not-an-email,0955750088,Can Tho,Gold,active,daily_file,2025-11-05T15:02:00+07:00,2026-07-01T08:01:00+07:00
+CUS000003,Andrea Bernard,user0002@example.com,0918497333,Can Tho,Silver,active,daily_file,2025-01-15T08:34:00+07:00,2026-07-01T08:02:00+07:00
+CUS000003,Patrick Johnson,user0003@example.com,0944125945,Hanoi,Platinum,active,daily_file,2025-03-12T17:29:00+07:00,2026-07-01T08:03:00+07:00
+CUS000004,,user0004@example.com,0922058255,Hai Phong,Gold,active,daily_file,2025-03-22T23:35:00+07:00,2026-07-01T08:04:00+07:00
+CUS000005,Justin Frey,user0005@example.com,0943463313,Da Nang,Gold,UNKNOWN,daily_file,2025-09-05T13:28:00+07:00,2026-07-01T08:05:00+07:00
+CUS000006,Keith Liu,user0006@example.com,0990680564,Quang Ninh,Silver,active,daily_file,2025-07-07T22:51:00+07:00,2026-07-01T08:06:00+07:00
+CUS000007,Michelle Brady,user0007@example.com,0965107702,Hanoi,Gold,active,daily_file,2025-06-11T20:53:00+07:00,2026-07-01T08:07:00+07:00
+CUS000008,Paul Baker,user0008@example.com,0947314288,Hai Phong,Standard,active,daily_file,2025-02-04T15:37:00+07:00,2026-07-01T08:08:00+07:00
+CUS000009,Jason Bentley,user0009@example.com,0920754865,Can Tho,Standard,active,daily_file,2025-01-06T16:13:00+07:00,2026-07-01T08:09:00+07:00
+CUS000010,Seth Kelly,user0010@example.com,0982069535,Da Nang,Platinum,active,daily_file,2025-10-03T17:56:00+07:00,2026-07-01T08:10:00+07:00
+CUS000011,Katrina Edwards,user0011@example.com,0918487784,Nha Trang,Standard,active,daily_file,2025-09-10T23:43:00+07:00,2026-07-01T08:11:00+07:00
+CUS000012,Marcia Mosley,user0012@example.com,0970848481,Nha Trang,Standard,active,daily_file,2025-06-08T08:00:00+07:00,2026-07-01T08:12:00+07:00
+CUS000013,Austin Potts,user0013@example.com,0915041190,Vinh,Gold,active,daily_file,2025-10-03T22:51:00+07:00,2026-07-01T08:13:00+07:00
+CUS000014,James Miller,user0014@example.com,0939040701,Da Nang,Platinum,active,daily_file,2025-10-28T11:52:00+07:00,2026-07-01T08:14:00+07:00
+CUS000015,Mr. Juan Woods,user0015@example.com,0992814215,Hai Phong,Silver,active,daily_file,2025-01-14T12:12:00+07:00,2026-07-01T08:15:00+07:00
+CUS000016,Kimberly Johnson,user0016@example.com,0917646664,Hai Phong,Silver,active,daily_file,2025-05-15T18:52:00+07:00,2026-07-01T08:16:00+07:00
+CUS000017,Johnny Brown,user0017@example.com,0991283096,Vinh,Platinum,active,daily_file,2025-01-07T12:32:00+07:00,2026-07-01T08:17:00+07:00
+CUS000018,Michelle Collins,user0018@example.com,0968631003,Bac Ninh,Standard,active,daily_file,2025-03-29T11:56:00+07:00,2026-07-01T08:18:00+07:00
+CUS000019,Dustin Byrd,user0019@example.com,0912916133,Nha Trang,Gold,active,daily_file,2025-03-20T22:52:00+07:00,2026-07-01T08:19:00+07:00
+CUS000020,Amanda Ibarra,user0020@example.com,0958198644,Hai Phong,Platinum,active,daily_file,2025-04-06T17:21:00+07:00,2026-07-01T08:20:00+07:00
+CUS000021,Terry Trevino,user0021@example.com,0940758073,Vinh,Standard,active,daily_file,2025-06-03T16:16:00+07:00,2026-07-01T08:21:00+07:00
+CUS000022,David Hill,user0022@example.com,0976240184,Vinh,Silver,active,daily_file,2025-08-31T12:14:00+07:00,2026-07-01T08:22:00+07:00
+CUS000023,Allison Jensen,user0023@example.com,0997492787,Ho Chi Minh City,Gold,active,daily_file,2025-01-14T08:12:00+07:00,2026-07-01T08:23:00+07:00
+CUS000024,Ethan Baker,user0024@example.com,0990339427,Bac Ninh,Standard,active,daily_file,2025-07-23T09:00:00+07:00,2026-07-01T08:24:00+07:00
+CUS000025,Joseph Potts,user0025@example.com,0915998207,Hanoi,Standard,active,daily_file,2025-04-18T14:20:00+07:00,2026-07-01T08:25:00+07:00
+CUS000026,Deborah Valenzuela,user0026@example.com,0931311818,Can Tho,Platinum,active,daily_file,2025-03-11T20:25:00+07:00,2026-07-01T08:26:00+07:00
+CUS000027,Dale Jackson,user0027@example.com,0990893089,Hanoi,Gold,active,daily_file,2025-06-12T17:41:00+07:00,2026-07-01T08:27:00+07:00
+CUS000028,Jason Rivera,user0028@example.com,0975412930,Hanoi,Gold,active,daily_file,2025-03-31T17:18:00+07:00,2026-07-01T08:28:00+07:00
+CUS000029,Dr. Shane Johnson,user0029@example.com,0935301792,Da Nang,Platinum,active,daily_file,2025-12-27T21:47:00+07:00,2026-07-01T08:29:00+07:00
+CUS000030,Patricia Lopez,user0030@example.com,0934750425,Hanoi,Silver,active,daily_file,2025-08-28T21:22:00+07:00,2026-07-01T08:30:00+07:00
+CUS000031,Greg Potter,user0031@example.com,0949794981,Ho Chi Minh City,Silver,active,daily_file,2025-09-27T21:45:00+07:00,2026-07-01T08:31:00+07:00
+CUS000032,Daryl Dixon,user0032@example.com,0957461241,Hanoi,Silver,active,daily_file,2025-01-07T10:55:00+07:00,2026-07-01T08:32:00+07:00
+CUS000033,Christine Wright,user0033@example.com,0911465269,Nha Trang,Gold,active,daily_file,2025-04-03T20:07:00+07:00,2026-07-01T08:33:00+07:00
+CUS000034,Tracy White,user0034@example.com,0977114186,Hanoi,Silver,active,daily_file,2025-02-27T15:13:00+07:00,2026-07-01T08:34:00+07:00
+CUS000035,Phillip Smith,user0035@example.com,0991026514,Vinh,Platinum,active,daily_file,2025-11-20T19:08:00+07:00,2026-07-01T08:35:00+07:00
+CUS000036,Sandra Vargas,user0036@example.com,0982826354,Vinh,Platinum,active,daily_file,2025-06-12T14:28:00+07:00,2026-07-01T08:36:00+07:00
+CUS000037,Raymond George,user0037@example.com,0935327073,Nha Trang,Gold,active,daily_file,2025-04-18T08:15:00+07:00,2026-07-01T08:37:00+07:00
+CUS000038,Nicole Clark,user0038@example.com,0964422769,Ho Chi Minh City,Standard,active,daily_file,2025-05-17T16:11:00+07:00,2026-07-01T08:38:00+07:00
+CUS000039,George Cook,user0039@example.com,0942909481,Ho Chi Minh City,Platinum,active,daily_file,2025-02-09T13:45:00+07:00,2026-07-01T08:39:00+07:00
+CUS000040,Chad Moore,user0040@example.com,0991361017,Vinh,Platinum,inactive,daily_file,2025-05-24T10:22:00+07:00,2026-07-01T08:40:00+07:00

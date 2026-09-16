@@ -1,0 +1,5 @@
+-- Buổi 4
+-- TODO: Xác định grain trước khi viết DDL.
+-- TODO: Tạo dim_date, dim_customer, dim_product, dim_payment_method, dim_order_status.
+-- TODO: Tạo fact_sales và script load.
+-- TODO: Viết 5 query đối soát OLTP ↔ Data Mart.

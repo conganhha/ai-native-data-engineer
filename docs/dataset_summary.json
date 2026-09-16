@@ -1,0 +1,12 @@
+{
+  "customers_seed": 1000,
+  "products_seed": 500,
+  "orders_seed": 5000,
+  "order_items_seed": 12717,
+  "payments_seed": 4517,
+  "customers_incremental": 100,
+  "products_incremental": 50,
+  "orders_incremental": 600,
+  "order_items_incremental": 1533,
+  "payments_incremental": 536
+}
