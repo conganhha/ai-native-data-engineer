@@ -74,3 +74,24 @@ JOIN products p ON oi.product_id = p.product_id
 JOIN categories cat ON p.category_id = cat.category_id
 GROUP BY 1
 HAVING SUM(oi.quantity * oi.unit_price - oi.discount_amount) > 100;
+
+-- Q11
+SELECT o.order_id, c.full_name, c.email
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id;
+
+-- Q12
+SELECT p.product_name, p.unit_price, *
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id;
+
+-- Q13
+WITH orders_with_payments AS (
+    SELECT o.order_id, o.order_total, o.order_date, p.payment_method, p.payment_status 
+    FROM orders o
+    JOIN payments p ON p.order_id = o.order_id
+)
+SELECT *
+FROM orders_with_payments
+LEFT JOIN order_items using (order_id)
+WHERE order_item_id IS NULL;
