@@ -31,8 +31,8 @@ def read_dataset(path: Path) -> pd.DataFrame:
         logger.error(f"UNKNOWN_ERROR: {path}")
         raise
     if len(df) == 0:
-        logger.critical(f"EMPTY_DATASET: {file}")
-        raise ValueError(f"EMPTY_DATASET: {file}")
+        logger.critical(f"EMPTY_DATASET: {file_name}")
+        raise ValueError(f"EMPTY_DATASET: {file_name}")
     logger.info(f"SUCCESS {file_name}: {len(df)} rows")
     return df
 
@@ -43,11 +43,3 @@ def profile(df: pd.DataFrame) -> dict:
     duplicates = int(df.duplicated().sum())
 
     return {'rows': rows, 'columns': columns, 'missings': missings, 'duplicates': duplicates}
-
-
-source = Path(__file__).resolve().parents[1] / 'data' / 'incremental' / 'day_2026-07-01'
-files = ["customers_daily.csv", "products_daily.csv", "orders_daily.csv", "order_items_daily.csv", "payments_daily.json"]
-df: dict[str, pd.DataFrame] = {}
-for file in files:
-    df[file] = read_dataset(source / file)
-    logger.info(profile(df[file]))

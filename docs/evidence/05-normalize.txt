@@ -1,0 +1,154 @@
+================================================================
+EVIDENCE 05 - NORMALIZE (Before vs After)
+Nguon du lieu : data/incremental/day_2026-07-01  (batch sach)
+Ham xu ly     : src/transform.py :: normalize()
+================================================================
+
+Quy tac chuan hoa ap dung (theo thu tu):
+  1. Ten cot  : strip() + lower()                        -> chuan hoa header
+  2. String   : strip() khoang trang dau/cuoi            -> object/string
+  3. Email    : lower()                                  -> cot email
+  4. Enum     : lower()  (status, payment_status, payment_method, channel)
+  5. Numeric  : pd.to_numeric(errors='coerce')           -> float64
+  6. Datetime : pd.to_datetime(errors='coerce', utc=True)-> datetime64[ns, UTC]
+
+Chu y: normalize() tra ve ban COPY (out = df.copy()), khong sua file RAW/source.
+
+----------------------------------------------------------------
+[1/5] customers_daily.csv  -  5 dong mau
+----------------------------------------------------------------
+
+>>> BEFORE (doc tu file, tat ca cot = object/string)
+dtypes: customer_id=object, full_name=object, email=object, phone=object, city=object, customer_segment=object, status=object, source_system=object, created_at=object, updated_at=object
+  customer_id        full_name                 email       phone       city customer_segment  status source_system                 created_at                 updated_at
+0   CUS000001    Glenda Crosby  user0001@example.com  0955750088    Can Tho             Gold  active    daily_file  2025-11-05T15:02:00+07:00  2026-07-01T08:01:00+07:00
+1   CUS000002   Andrea Bernard  user0002@example.com  0918497333    Can Tho           Silver  active    daily_file  2025-01-15T08:34:00+07:00  2026-07-01T08:02:00+07:00
+2   CUS000003  Patrick Johnson  user0003@example.com  0944125945      Hanoi         Platinum  active    daily_file  2025-03-12T17:29:00+07:00  2026-07-01T08:03:00+07:00
+3   CUS000004     Linda Martin  user0004@example.com  0922058255  Hai Phong             Gold  active    daily_file  2025-03-22T23:35:00+07:00  2026-07-01T08:04:00+07:00
+4   CUS000005      Justin Frey  user0005@example.com  0943463313    Da Nang             Gold  active    daily_file  2025-09-05T13:28:00+07:00  2026-07-01T08:05:00+07:00
+
+>>> AFTER (sau normalize)
+dtypes: customer_id=object, full_name=object, email=object, phone=object, city=object, customer_segment=object, status=object, source_system=object, created_at=datetime64[ns, UTC], updated_at=datetime64[ns, UTC]
+  customer_id        full_name                 email       phone       city customer_segment  status source_system                created_at                updated_at
+0   CUS000001    Glenda Crosby  user0001@example.com  0955750088    Can Tho             Gold  active    daily_file 2025-11-05 08:02:00+00:00 2026-07-01 01:01:00+00:00
+1   CUS000002   Andrea Bernard  user0002@example.com  0918497333    Can Tho           Silver  active    daily_file 2025-01-15 01:34:00+00:00 2026-07-01 01:02:00+00:00
+2   CUS000003  Patrick Johnson  user0003@example.com  0944125945      Hanoi         Platinum  active    daily_file 2025-03-12 10:29:00+00:00 2026-07-01 01:03:00+00:00
+3   CUS000004     Linda Martin  user0004@example.com  0922058255  Hai Phong             Gold  active    daily_file 2025-03-22 16:35:00+00:00 2026-07-01 01:04:00+00:00
+4   CUS000005      Justin Frey  user0005@example.com  0943463313    Da Nang             Gold  active    daily_file 2025-09-05 06:28:00+00:00 2026-07-01 01:05:00+00:00
+
+>>> THAY DOI THEO NHOM CHUAN HOA
+    - created_at: object -> datetime64[ns, UTC]
+    - updated_at: object -> datetime64[ns, UTC]
+
+----------------------------------------------------------------
+[2/5] products_daily.csv  -  5 dong mau
+----------------------------------------------------------------
+
+>>> BEFORE (doc tu file, tat ca cot = object/string)
+dtypes: product_id=object, category_id=object, product_name=object, unit_price=object, cost_price=object, status=object, source_system=object, created_at=object, updated_at=object
+  product_id category_id          product_name  unit_price  cost_price    status source_system                 created_at                 updated_at
+0  PRD000001      CAT018      Product 001 Note  1039500.00   700000.00    active    daily_file  2025-09-17T08:00:00+07:00  2026-07-01T08:01:00+07:00
+1  PRD000002      CAT013       Product 002 Far   178500.00   111000.00    active    daily_file  2025-08-23T08:00:00+07:00  2026-07-01T08:02:00+07:00
+2  PRD000003      CAT012  Product 003 Physical  6061000.00  4665000.00    active    daily_file  2025-06-20T08:00:00+07:00  2026-07-01T08:03:00+07:00
+3  PRD000004      CAT019    Product 004 Degree  6080000.00  3623000.00  inactive    daily_file  2025-06-07T08:00:00+07:00  2026-07-01T08:04:00+07:00
+4  PRD000005      CAT011      Product 005 Step  6468000.00  4950000.00    active    daily_file  2025-03-27T08:00:00+07:00  2026-07-01T08:05:00+07:00
+
+>>> AFTER (sau normalize)
+dtypes: product_id=object, category_id=object, product_name=object, unit_price=float64, cost_price=float64, status=object, source_system=object, created_at=datetime64[ns, UTC], updated_at=datetime64[ns, UTC]
+  product_id category_id          product_name  unit_price  cost_price    status source_system                created_at                updated_at
+0  PRD000001      CAT018      Product 001 Note   1039500.0    700000.0    active    daily_file 2025-09-17 01:00:00+00:00 2026-07-01 01:01:00+00:00
+1  PRD000002      CAT013       Product 002 Far    178500.0    111000.0    active    daily_file 2025-08-23 01:00:00+00:00 2026-07-01 01:02:00+00:00
+2  PRD000003      CAT012  Product 003 Physical   6061000.0   4665000.0    active    daily_file 2025-06-20 01:00:00+00:00 2026-07-01 01:03:00+00:00
+3  PRD000004      CAT019    Product 004 Degree   6080000.0   3623000.0  inactive    daily_file 2025-06-07 01:00:00+00:00 2026-07-01 01:04:00+00:00
+4  PRD000005      CAT011      Product 005 Step   6468000.0   4950000.0    active    daily_file 2025-03-27 01:00:00+00:00 2026-07-01 01:05:00+00:00
+
+>>> THAY DOI THEO NHOM CHUAN HOA
+    - unit_price: object -> float64
+    - cost_price: object -> float64
+    - created_at: object -> datetime64[ns, UTC]
+    - updated_at: object -> datetime64[ns, UTC]
+
+----------------------------------------------------------------
+[3/5] orders_daily.csv  -  5 dong mau
+----------------------------------------------------------------
+
+>>> BEFORE (doc tu file, tat ca cot = object/string)
+dtypes: order_id=object, customer_id=object, order_date=object, status=object, shipping_city=object, channel=object, order_total=object, source_system=object, created_at=object, updated_at=object
+    order_id customer_id                 order_date     status shipping_city     channel  order_total  source_system                 created_at                 updated_at
+0  ORD005001   CUS000834  2026-07-01T18:57:00+07:00  completed      Bac Ninh  mobile_app  19156500.00  ecommerce_api  2026-07-01T18:57:00+07:00  2026-07-01T20:41:00+07:00
+1  ORD005002   CUS000635  2026-07-01T20:47:00+07:00    pending          Vinh         web   7092000.00  ecommerce_api  2026-07-01T20:47:00+07:00  2026-07-01T21:22:00+07:00
+2  ORD005003   CUS000217  2026-07-01T14:44:00+07:00  completed    Quang Ninh      social  14082500.00  ecommerce_api  2026-07-01T14:44:00+07:00  2026-07-01T16:26:00+07:00
+3  ORD005004   CUS000948  2026-07-01T18:51:00+07:00  confirmed     Hai Phong      social  21671000.00  ecommerce_api  2026-07-01T18:51:00+07:00  2026-07-01T20:12:00+07:00
+4  ORD005005   CUS000522  2026-07-01T08:59:00+07:00  completed           Hue  mobile_app  13172000.00  ecommerce_api  2026-07-01T08:59:00+07:00  2026-07-01T11:10:00+07:00
+
+>>> AFTER (sau normalize)
+dtypes: order_id=object, customer_id=object, order_date=datetime64[ns, UTC], status=object, shipping_city=object, channel=object, order_total=float64, source_system=object, created_at=datetime64[ns, UTC], updated_at=datetime64[ns, UTC]
+    order_id customer_id                order_date     status shipping_city     channel  order_total  source_system                created_at                updated_at
+0  ORD005001   CUS000834 2026-07-01 11:57:00+00:00  completed      Bac Ninh  mobile_app   19156500.0  ecommerce_api 2026-07-01 11:57:00+00:00 2026-07-01 13:41:00+00:00
+1  ORD005002   CUS000635 2026-07-01 13:47:00+00:00    pending          Vinh         web    7092000.0  ecommerce_api 2026-07-01 13:47:00+00:00 2026-07-01 14:22:00+00:00
+2  ORD005003   CUS000217 2026-07-01 07:44:00+00:00  completed    Quang Ninh      social   14082500.0  ecommerce_api 2026-07-01 07:44:00+00:00 2026-07-01 09:26:00+00:00
+3  ORD005004   CUS000948 2026-07-01 11:51:00+00:00  confirmed     Hai Phong      social   21671000.0  ecommerce_api 2026-07-01 11:51:00+00:00 2026-07-01 13:12:00+00:00
+4  ORD005005   CUS000522 2026-07-01 01:59:00+00:00  completed           Hue  mobile_app   13172000.0  ecommerce_api 2026-07-01 01:59:00+00:00 2026-07-01 04:10:00+00:00
+
+>>> THAY DOI THEO NHOM CHUAN HOA
+    - order_date: object -> datetime64[ns, UTC]
+    - order_total: object -> float64
+    - created_at: object -> datetime64[ns, UTC]
+    - updated_at: object -> datetime64[ns, UTC]
+
+----------------------------------------------------------------
+[4/5] order_items_daily.csv  -  5 dong mau
+----------------------------------------------------------------
+
+>>> BEFORE (doc tu file, tat ca cot = object/string)
+dtypes: order_item_id=object, order_id=object, product_id=object, quantity=object, unit_price=object, discount_amount=object, source_system=object, created_at=object, updated_at=object
+  order_item_id   order_id product_id quantity  unit_price discount_amount  source_system                 created_at                 updated_at
+0   ITM00012718  ORD005001  PRD000343        1  6980000.00            0.00  ecommerce_api  2026-07-01T18:57:00+07:00  2026-07-01T18:57:00+07:00
+1   ITM00012719  ORD005001  PRD000462        1  5460000.00            0.00  ecommerce_api  2026-07-01T18:57:00+07:00  2026-07-01T18:57:00+07:00
+2   ITM00012720  ORD005001  PRD000093        1  7070000.00       353500.00  ecommerce_api  2026-07-01T18:57:00+07:00  2026-07-01T18:57:00+07:00
+3   ITM00012721  ORD005002  PRD000326        1  5750000.00       575000.00  ecommerce_api  2026-07-01T20:47:00+07:00  2026-07-01T20:47:00+07:00
+4   ITM00012722  ORD005002  PRD000012        1  2130000.00       213000.00  ecommerce_api  2026-07-01T20:47:00+07:00  2026-07-01T20:47:00+07:00
+
+>>> AFTER (sau normalize)
+dtypes: order_item_id=object, order_id=object, product_id=object, quantity=int64, unit_price=float64, discount_amount=float64, source_system=object, created_at=datetime64[ns, UTC], updated_at=datetime64[ns, UTC]
+  order_item_id   order_id product_id  quantity  unit_price  discount_amount  source_system                created_at                updated_at
+0   ITM00012718  ORD005001  PRD000343         1   6980000.0              0.0  ecommerce_api 2026-07-01 11:57:00+00:00 2026-07-01 11:57:00+00:00
+1   ITM00012719  ORD005001  PRD000462         1   5460000.0              0.0  ecommerce_api 2026-07-01 11:57:00+00:00 2026-07-01 11:57:00+00:00
+2   ITM00012720  ORD005001  PRD000093         1   7070000.0         353500.0  ecommerce_api 2026-07-01 11:57:00+00:00 2026-07-01 11:57:00+00:00
+3   ITM00012721  ORD005002  PRD000326         1   5750000.0         575000.0  ecommerce_api 2026-07-01 13:47:00+00:00 2026-07-01 13:47:00+00:00
+4   ITM00012722  ORD005002  PRD000012         1   2130000.0         213000.0  ecommerce_api 2026-07-01 13:47:00+00:00 2026-07-01 13:47:00+00:00
+
+>>> THAY DOI THEO NHOM CHUAN HOA
+    - quantity: object -> int64
+    - unit_price: object -> float64
+    - discount_amount: object -> float64
+    - created_at: object -> datetime64[ns, UTC]
+    - updated_at: object -> datetime64[ns, UTC]
+
+----------------------------------------------------------------
+[5/5] payments_daily.json  -  5 dong mau
+----------------------------------------------------------------
+
+>>> BEFORE (doc tu file, tat ca cot = object/string)
+dtypes: payment_id=object, order_id=object, payment_date=object, payment_method=object, payment_status=object, amount=object, source_system=object, created_at=object, updated_at=object
+  payment_id   order_id               payment_date payment_method payment_status       amount  source_system                 created_at                 updated_at
+0  PAY004518  ORD005001  2026-07-01T23:35:00+07:00  bank_transfer        success  19156500.00  ecommerce_api  2026-07-01T23:35:00+07:00  2026-07-01T23:35:00+07:00
+1  PAY004519  ORD005002  2026-07-01T22:14:00+07:00           card         failed   7092000.00  ecommerce_api  2026-07-01T22:14:00+07:00  2026-07-01T22:14:00+07:00
+2  PAY004520  ORD005003  2026-07-01T15:51:00+07:00       e_wallet        success  14082500.00  ecommerce_api  2026-07-01T15:51:00+07:00  2026-07-01T15:51:00+07:00
+3  PAY004521  ORD005005  2026-07-01T09:54:00+07:00  bank_transfer        success  13172000.00  ecommerce_api  2026-07-01T09:54:00+07:00  2026-07-01T09:54:00+07:00
+4  PAY004522  ORD005006  2026-07-01T15:39:00+07:00  bank_transfer        success  15050000.00  ecommerce_api  2026-07-01T15:39:00+07:00  2026-07-01T15:39:00+07:00
+
+>>> AFTER (sau normalize)
+dtypes: payment_id=object, order_id=object, payment_date=datetime64[ns, UTC], payment_method=object, payment_status=object, amount=float64, source_system=object, created_at=datetime64[ns, UTC], updated_at=datetime64[ns, UTC]
+  payment_id   order_id              payment_date payment_method payment_status      amount  source_system                created_at                updated_at
+0  PAY004518  ORD005001 2026-07-01 16:35:00+00:00  bank_transfer        success  19156500.0  ecommerce_api 2026-07-01 16:35:00+00:00 2026-07-01 16:35:00+00:00
+1  PAY004519  ORD005002 2026-07-01 15:14:00+00:00           card         failed   7092000.0  ecommerce_api 2026-07-01 15:14:00+00:00 2026-07-01 15:14:00+00:00
+2  PAY004520  ORD005003 2026-07-01 08:51:00+00:00       e_wallet        success  14082500.0  ecommerce_api 2026-07-01 08:51:00+00:00 2026-07-01 08:51:00+00:00
+3  PAY004521  ORD005005 2026-07-01 02:54:00+00:00  bank_transfer        success  13172000.0  ecommerce_api 2026-07-01 02:54:00+00:00 2026-07-01 02:54:00+00:00
+4  PAY004522  ORD005006 2026-07-01 08:39:00+00:00  bank_transfer        success  15050000.0  ecommerce_api 2026-07-01 08:39:00+00:00 2026-07-01 08:39:00+00:00
+
+>>> THAY DOI THEO NHOM CHUAN HOA
+    - payment_date: object -> datetime64[ns, UTC]
+    - amount: object -> float64
+    - created_at: object -> datetime64[ns, UTC]
+    - updated_at: object -> datetime64[ns, UTC]
