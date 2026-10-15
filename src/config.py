@@ -18,5 +18,5 @@ class Settings:
     report_dir: Path = root / 'reports'
     log_dir: Path = root / 'logs'
     staging_dir: Path = root / 'data' / 'staging'
-
+    tmp_dir: Path = root / 'tmp'
 SETTINGS = Settings()
