@@ -1,0 +1,4 @@
+2026-10-14 18:26:48,389 | INFO     | Ecommerce | root = /Users/mac/Code/AI_Native_DE_Module1_Student_Pack_v3_Speaker_Notes
+2026-10-14 18:26:48,389 | INFO     | Ecommerce | database_url = postgresql+psycopg://de_user:de_password@localhost:5432/ecommerce
+2026-10-14 18:26:48,389 | INFO     | Ecommerce | raw_dir = /Users/mac/Code/AI_Native_DE_Module1_Student_Pack_v3_Speaker_Notes/data/raw
+2026-10-14 18:26:48,389 | INFO     | Ecommerce | metadata_dir = /Users/mac/Code/AI_Native_DE_Module1_Student_Pack_v3_Speaker_Notes/metadata
