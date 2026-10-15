@@ -15,7 +15,8 @@ class Settings:
     raw_dir: Path = root / 'data' / 'raw'
     reject_dir: Path = root / 'data' / 'reject'
     metadata_dir: Path = root / 'metadata'
-    report_dir = root / 'reports'
-    log_dir = root / 'logs'
+    report_dir: Path = root / 'reports'
+    log_dir: Path = root / 'logs'
+    staging_dir: Path = root / 'data' / 'staging'
 
 SETTINGS = Settings()

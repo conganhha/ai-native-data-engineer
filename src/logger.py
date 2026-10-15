@@ -1,7 +1,7 @@
 import logging
 from config import SETTINGS
 
-def get_logger(name: str = "Ecommerce", file_log: str = "pipeline.log") -> logging:
+def get_logger(name: str = "pipeline", file_log: str = "pipeline.log") -> logging:
     SETTINGS.log_dir.mkdir(exist_ok=True)
 
     logger = logging.getLogger(name)
