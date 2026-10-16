@@ -1,0 +1,18 @@
+================================================================== test session starts ==================================================================
+platform darwin -- Python 3.14.3, pytest-8.4.2, pluggy-1.6.0 -- /Users/mac/Code/AI_Native_DE_Module1_Student_Pack_v3_Speaker_Notes/src/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/mac/Code/AI_Native_DE_Module1_Student_Pack_v3_Speaker_Notes
+configfile: pytest.ini
+plugins: anyio-4.15.1
+collected 8 items                                                                                                                                       
+
+tests/test_extract.py::test_read_csv_success PASSED                                                                                               [ 12%]
+tests/test_extract.py::test_json_nested_date PASSED                                                                                               [ 25%]
+tests/test_extract.py::test_read_file_not_found PASSED                                                                                            [ 37%]
+tests/test_extract.py::test_read_unsupported_file PASSED                                                                                          [ 50%]
+tests/test_transform.py::test_profile_metrics PASSED                                                                                              [ 62%]
+tests/test_transform.py::test_normalize_raw_immutability PASSED                                                                                   [ 75%]
+tests/test_transform.py::test_normalize_strings_and_enums PASSED                                                                                  [ 87%]
+tests/test_transform.py::test_normalize_numeric_and_datetime PASSED                                                                               [100%]
+
+=================================================================== 8 passed in 0.54s ===================================================================

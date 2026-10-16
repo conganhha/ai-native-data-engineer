@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
 from src.extract_files import read_dataset
-from pathlib import Path
 
 def test_read_csv_success(tmp_path):
     test_csv = {

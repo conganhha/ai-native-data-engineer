@@ -4,7 +4,7 @@ from config import SETTINGS
 
 logger = get_logger(file_log='nomarlize.log')
 
-LOWERCASE_COLUMNS = ['status', 'payment_status', 'payment_method', 'channel']
+LOWERCASE_COLUMNS = ['email', 'status', 'payment_status', 'payment_method', 'channel']
 NUMERIC_COLUMNS = ['unit_price', 'cost_price', 'order_total', 'discount_amount', 'amount', 'quantity']
 DATETIME_COLUMNS = ['order_date', 'payment_date', 'created_at', 'updated_at']
 
